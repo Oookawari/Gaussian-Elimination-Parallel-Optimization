@@ -1,0 +1,34 @@
+#include <arm_neon.h>
+#include <iostream>
+#include <iomanip>
+#include <random>
+#include <stdio.h>
+#include <time.h>
+const int TIME = 1000000;
+float test1[TIME];
+float test2[TIME];
+using namespace std;
+int main() {
+	for (int i = 0; i < TIME; i++) {
+		test1[i] = i % 1000;
+		test2[i] = i % 1000;
+	}
+	struct timespec sts, ets;
+	double time_sum = 0.0;
+	timespec_get(&sts, TIME_UTC);
+	for (int i = 0; i + 4 <= TIME; i+=4) {
+		float32x4_t vector_1 = vld1q_f32(&test1[i]);
+		float32x4_t vector_2 = vld1q_f32(&test1[i]);
+		float32x4_t vector_mul = vmulq_f32(vector_1, vector_2);
+		vector_1 = vsubq_f32(vector_1, vector_mul);
+		vst1q_f32(&test1[i], vector_1);
+	}
+
+
+
+	timespec_get(&ets, TIME_UTC);
+	time_sum = (ets.tv_nsec - sts.tv_nsec) * 0.000001 + (ets.tv_sec - sts.tv_sec) * 1000;
+	cout << fixed << setprecision(4) << time_sum << endl;
+
+	return 0;
+}
